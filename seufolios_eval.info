@@ -1,0 +1,9 @@
+name = SEUFolios Evaluation
+description = Ties into SEUFolios WP install to fetch and process portfolio evaluations
+package = Core
+version = 0.1
+core = 7.x
+
+configure = admin/config/seufolios
+
+files[] = seufolios.module
