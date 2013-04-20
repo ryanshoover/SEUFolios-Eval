@@ -62,7 +62,7 @@ function seufolios_admin_form($form, &$form_state) {
 	  '#type' => 'textfield',
 	  '#title' => t('URL'),
 	  '#description' => t('URL of the SEUFolios installation'),
-	  '#default_value' => 'http://seufolios.org/wp-content/plugins/SEUFolios/evaluation/outside_query.php',
+	  '#default_value' => 'http://seufolios.org/wp-content/plugins/seufolios/evaluation/outside_query.php',
 	  '#size' => 40,
 	  '#maxlength' => 120,
 	  '#required' => TRUE,
@@ -160,7 +160,7 @@ function seufolios_admin_form_submit() {
 	}
 	
 	//******
-	//Create Full dump of all results
+	//Create Full Report of all results
 	$body_text = loadHeader();
 	
 	//plot all averages
@@ -652,7 +652,7 @@ function printComments($array) {
 	}
 		
 	$result .= "</table>";	
-		
+	//$result .= print_r($array, true);	
 	return $result;
 }
 
