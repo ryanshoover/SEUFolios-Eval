@@ -372,22 +372,7 @@ function calcEvalAvgs($evals) {
 		}
 	}	
 	
-	//!!! HARD CODED !!!
-	//Process subquestions into student SLOs
-	$slo['write_for_situation']['total'] = $ans_avg['des_relevant']['total'] + $ans_avg['des_rhetorical']['total'] +$ans_avg['des_reading_xp']['total'] +$ans_avg['rhetsit_portfolio']['total'] +$ans_avg['rhetsit_master_genres']['total'] +$ans_avg['rhetsit_variety_genres']['total'] +$ans_avg['rhetsit_rhet_strategies']['total'];
-	$slo['write_for_situation']['count'] = $ans_avg['des_relevant']['count'] + $ans_avg['des_rhetorical']['count'] +$ans_avg['des_reading_xp']['count'] +$ans_avg['rhetsit_portfolio']['count'] +$ans_avg['rhetsit_master_genres']['count'] +$ans_avg['rhetsit_variety_genres']['count'] +$ans_avg['rhetsit_rhet_strategies']['count'];
-	$slo['write_for_situation']['values'] = array_merge($ans_avg['des_relevant']['values'], $ans_avg['des_rhetorical']['values'], $ans_avg['des_reading_xp']['values'], $ans_avg['rhetsit_portfolio']['values'], $ans_avg['rhetsit_master_genres']['values'], $ans_avg['rhetsit_variety_genres']['values'], $ans_avg['rhetsit_rhet_strategies']['values']);
-	$slo['write_for_situation']['avg']   = 
-		(0.10 * $ans_avg['des_relevant']['total']/$ans_avg['des_relevant']['count']) + 
-		(0.10 * $ans_avg['des_rhetorical']['total']/$ans_avg['des_rhetorical']['count']) + 
-		(0.05 * $ans_avg['des_reading_xp']['total']/$ans_avg['des_reading_xp']['count']) +
-		(0.20 * $ans_avg['rhetsit_portfolio']['total']/$ans_avg['rhetsit_portfolio']['count']) +
-		(0.15 * $ans_avg['rhetsit_master_genres']['total']/$ans_avg['rhetsit_master_genres']['count']) +
-		(0.20 * $ans_avg['rhetsit_variety_genres']['total']/$ans_avg['rhetsit_variety_genres']['count']) +
-		(0.20 * $ans_avg['rhetsit_rhet_strategies']['total']/$ans_avg['rhetsit_rhet_strategies']['count']);
-	$slo['write_for_situation']['sd'] = sd($slo['write_for_situation']['values']);
-	
-	return $slo;
+	return $ans_avg;
 }
 
 //Universal JS and CSS
