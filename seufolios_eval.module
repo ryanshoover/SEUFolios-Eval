@@ -386,6 +386,64 @@ function calcEvalAvgs($evals) {
 		(0.20 * $ans_avg['rhetsit_variety_genres']['total']/$ans_avg['rhetsit_variety_genres']['count']) +
 		(0.20 * $ans_avg['rhetsit_rhet_strategies']['total']/$ans_avg['rhetsit_rhet_strategies']['count']);
 	$slo['write_for_situation']['sd'] = sd($slo['write_for_situation']['values']);
+
+	$slo['analyze_situation']['total'] = $ans_avg['sources_conversation']['total'] + $ans_avg['sources_incorporate']['total'] +$ans_avg['sources_contradictory']['total'];
+	$slo['analyze_situation']['count'] = $ans_avg['sources_conversation']['count'] + $ans_avg['sources_incorporate']['count'] +$ans_avg['sources_contradictory']['count'];
+	$slo['analyze_situation']['values'] = array_merge($ans_avg['sources_conversation']['values'], $ans_avg['sources_incorporate']['values'], $ans_avg['sources_contradictory']['values']);
+	$slo['analyze_situation']['avg']   = 
+		(0.50 * $ans_avg['sources_conversation']['total']/$ans_avg['sources_conversation']['count']) + 
+		(0.25 * $ans_avg['sources_incorporate']['total']/$ans_avg['sources_incorporate']['count']) + 
+		(0.25 * $ans_avg['sources_contradictory']['total']/$ans_avg['sources_contradictory']['count']);
+	$slo['analyze_situation']['sd'] = sd($slo['analyze_situation']['values']);
+	
+	$slo['writing_process']['total'] = $ans_avg['edit_big_pic']['total'] + $ans_avg['edit_line_edits']['total'] +$ans_avg['edit_copyedits']['total'];
+	$slo['writing_process']['count'] = $ans_avg['edit_big_pic']['count'] + $ans_avg['edit_line_edits']['count'] +$ans_avg['edit_copyedits']['count'];
+	$slo['writing_process']['values'] = array_merge($ans_avg['edit_big_pic']['values'], $ans_avg['edit_line_edits']['values'], $ans_avg['edit_copyedits']['values']);
+	$slo['writing_process']['avg']   = 
+		(0.40 * $ans_avg['edit_big_pic']['total']/$ans_avg['edit_big_pic']['count']) + 
+		(0.40 * $ans_avg['edit_line_edits']['total']/$ans_avg['edit_line_edits']['count']) + 
+		(0.20 * $ans_avg['edit_copyedits']['total']/$ans_avg['edit_copyedits']['count']);
+	$slo['writing_process']['sd'] = sd($slo['writing_process']['values']);
+	
+	$slo['style_voice']['total'] = $ans_avg['rhetsit_variety_genres']['total'] + $ans_avg['rhetsit_rhet_strategies']['total'] +$ans_avg['style_authentic_voice']['total'] +$ans_avg['style_struc_trans']['total'] +$ans_avg['style_diction']['total'];
+	$slo['style_voice']['count'] = $ans_avg['rhetsit_variety_genres']['count'] + $ans_avg['rhetsit_rhet_strategies']['count'] +$ans_avg['style_authentic_voice']['count'] +$ans_avg['style_struc_trans']['count'] +$ans_avg['style_diction']['count'];
+	$slo['style_voice']['values'] = array_merge($ans_avg['rhetsit_variety_genres']['values'], $ans_avg['rhetsit_rhet_strategies']['values'], $ans_avg['style_authentic_voice']['values'], $ans_avg['style_struc_trans']['values'], $ans_avg['style_diction']['values']);
+	$slo['style_voice']['avg']   = 
+		(0.20 * $ans_avg['rhetsit_variety_genres']['total']/$ans_avg['rhetsit_variety_genres']['count']) + 
+		(0.20 * $ans_avg['rhetsit_rhet_strategies']['total']/$ans_avg['rhetsit_rhet_strategies']['count']) + 
+		(0.20 * $ans_avg['style_authentic_voice']['total']/$ans_avg['style_authentic_voice']['count']) +
+		(0.20 * $ans_avg['style_struc_trans']['total']/$ans_avg['style_struc_trans']['count']) +
+		(0.20 * $ans_avg['style_diction']['total']/$ans_avg['style_diction']['count']);
+	$slo['style_voice']['sd'] = sd($slo['style_voice']['values']);
+
+	$slo['writing_conventions']['total'] = $ans_avg['edit_line_edits']['total'] + $ans_avg['edit_copyedits']['total'] +$ans_avg['style_struc_trans']['total'] +$ans_avg['sources_incorporate']['total'];
+	$slo['writing_conventions']['count'] = $ans_avg['edit_line_edits']['count'] + $ans_avg['edit_copyedits']['count'] +$ans_avg['style_struc_trans']['count'] +$ans_avg['sources_incorporate']['count'];
+	$slo['writing_conventions']['values'] = array_merge($ans_avg['edit_line_edits']['values'], $ans_avg['edit_copyedits']['values'], $ans_avg['style_struc_trans']['values'], $ans_avg['sources_incorporate']['values']);
+	$slo['writing_conventions']['avg']   = 
+		(0.30 * $ans_avg['edit_line_edits']['total']/$ans_avg['edit_line_edits']['count']) + 
+		(0.50 * $ans_avg['edit_copyedits']['total']/$ans_avg['edit_copyedits']['count']) + 
+		(0.10 * $ans_avg['style_struc_trans']['total']/$ans_avg['style_struc_trans']['count']) +
+		(0.10 * $ans_avg['sources_incorporate']['total']/$ans_avg['sources_incorporate']['count']);
+	$slo['writing_conventions']['sd'] = sd($slo['writing_conventions']['values']);
+	
+	$slo['visual_design']['total'] = $ans_avg['des_relevant']['total'] + $ans_avg['des_cohesive']['total'] +$ans_avg['des_rhetorical']['total'] +$ans_avg['des_reading_xp']['total'];
+	$slo['visual_design']['count'] = $ans_avg['des_relevant']['count'] + $ans_avg['des_cohesive']['count'] +$ans_avg['des_rhetorical']['count'] +$ans_avg['des_reading_xp']['count'];
+	$slo['visual_design']['values'] = array_merge($ans_avg['des_relevant']['values'], $ans_avg['des_cohesive']['values'], $ans_avg['des_rhetorical']['values'], $ans_avg['des_reading_xp']['values']);
+	$slo['visual_design']['avg']   = 
+		(0.20 * $ans_avg['des_relevant']['total']/$ans_avg['des_relevant']['count']) + 
+		(0.20 * $ans_avg['des_cohesive']['total']/$ans_avg['des_cohesive']['count']) + 
+		(0.30 * $ans_avg['des_rhetorical']['total']/$ans_avg['des_rhetorical']['count']) +
+		(0.40 * $ans_avg['des_reading_xp']['total']/$ans_avg['des_reading_xp']['count']);
+	$slo['writing_conventions']['sd'] = sd($slo['writing_conventions']['values']);
+	
+	$slo['peer_edit']['total'] = $ans_avg['edit_big_pic']['total'] + $ans_avg['edit_line_edits']['total'] +$ans_avg['edit_copyedits']['total'];
+	$slo['peer_edit']['count'] = $ans_avg['edit_big_pic']['count'] + $ans_avg['edit_line_edits']['count'] +$ans_avg['edit_copyedits']['count'];
+	$slo['peer_edit']['values'] = array_merge($ans_avg['edit_big_pic']['values'], $ans_avg['edit_line_edits']['values'], $ans_avg['edit_copyedits']['values']);
+	$slo['peer_edit']['avg']   = 
+		(0.35 * $ans_avg['edit_big_pic']['total']/$ans_avg['edit_big_pic']['count']) + 
+		(0.35 * $ans_avg['edit_line_edits']['total']/$ans_avg['edit_line_edits']['count']) + 
+		(0.30 * $ans_avg['edit_copyedits']['total']/$ans_avg['edit_copyedits']['count']);
+	$slo['writing_process']['sd'] = sd($slo['writing_process']['values']);
 	
 	return $slo;
 }
