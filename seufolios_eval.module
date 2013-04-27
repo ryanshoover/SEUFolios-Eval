@@ -156,12 +156,13 @@ function seufolios_admin_form_submit() {
 	
 	if($_POST['seufolios_newnode_dept'] == 'ENGW') { 			//load ENGW historical data
 		$history = createENGWHistory($_POST['seufolios_newnode_startdate'], $_POST['seufolios_newnode_enddate']);
-		$eval_avgs = $eval_avgs + $history;
+		if($history) {$eval_avgs = $eval_avgs + $history;}
 	}
 	
 	//******
 	//Create Full Report of all results
 	$body_text = loadHeader();
+	//$body_text .= print_r($eval_avgs, true);
 	
 	//plot all averages
 	$flotname = 'all_avgs';
@@ -298,8 +299,8 @@ function calcAllEvalAvgs($evals) {
 	$time = time();
 	$date = getdate($time);
 	foreach($evals as $e) {
-		$e_date = getdate(strtotime($e['submittime']));	//create date array from submit timestamp
-	 	if($e_date['mon']>8) $e_date['year']++; 		//creates academic years from september to august (labeled by the last year)
+		$e_date = getdate(strtotime($e['submittime']));		//create date array from submit timestamp
+	 	if($e_date['mon']>8) $e_date['year']++; 			//creates academic years from september to august (labeled by the last year)
 		$sortedEvals[$e_date['year']][] = $e;				//feed the eval into array keyed by academic year
 	}
 	
@@ -312,30 +313,23 @@ function calcAllEvalAvgs($evals) {
 
 function calcEvalAvgs($evals) {
 	//set up ans_avg array (average of answers)
-	/* antiquated, see next foreach
-	foreach ($sections as $sec) {
-		foreach($questions[$sec->id] as $q) {
-			$ans_avg[$q->slug]['total'] = 0;
-			$ans_avg[$q->slug]['count'] = 0;
-			$ans_avg[$q->slug]['comments'] = array();
-		}
-	}
-	*/
 	foreach($evals as $eval) {
-		$elems_ar = explode('&', $eval['answers']); 
-		
-		for ($i = 0; $i < count($elems_ar); $i++) {
-		  //if(substr($elems_ar[$i],-1) != '=') { 				//test if there's no $val
-			  //list($key, $val) = explode('=', $elems_ar[$i]); 	// split variable name from value
-			  $key = strtok($elems_ar[$i], "=");
-			  $val = strtok("=");
-			  if ($val) {
-				  $key = urldecode($key);
-				  $ans_avg[$key]['total'] = 0;
-				  $ans_avg[$key]['count'] = 0;
-				  $ans_avg[$key]['comments'] = array();
-			  }
-		  //}
+		if($eval['answers']) {
+			$elems_ar = explode('&', $eval['answers']); 
+			
+			for ($i = 0; $i < count($elems_ar); $i++) {
+				  $key = strtok($elems_ar[$i], "=");
+				  $key = str_replace('_input', '', $key);
+				  $val = strtok("=");
+				  if ($val) { 				//screens out both missing values and zeros
+					  $key = urldecode($key);
+					  $ans_avg[$key]['total'] = 0;
+					  $ans_avg[$key]['count'] = 0;
+					  $ans_avg[$key]['comments'] = array();
+				  } elseif ($val == 0) { 	//for n/a option
+					  
+				  }
+			}
 		}
 	}
 	
@@ -343,11 +337,8 @@ function calcEvalAvgs($evals) {
 	foreach($evals as $eval) {
 	   $elems_ar = explode('&', $eval['answers']);     		// get all variables
 		for ($i = 0; $i < count($elems_ar); $i++) {
-			/*
-			if(substr($elems_ar[$i],-1) != '=') { 				//test if there's no $val
-				list($key, $val) = explode('=', $elems_ar[$i]); 	// split variable name from value
-			*/
 			$key = strtok($elems_ar[$i], "=");
+			$key = str_replace('_input', '', $key);
 			$val = strtok("=");
 			if ($val) {
 				$key = urldecode($key);
@@ -405,45 +396,45 @@ function calcEvalAvgs($evals) {
 		(0.20 * $ans_avg['edit_copyedits']['total']/$ans_avg['edit_copyedits']['count']);
 	$slo['writing_process']['sd'] = sd($slo['writing_process']['values']);
 	
-	$slo['style_voice']['total'] = $ans_avg['rhetsit_variety_genres']['total'] + $ans_avg['rhetsit_rhet_strategies']['total'] +$ans_avg['style_authentic_voice']['total'] +$ans_avg['style_struc_trans']['total'] +$ans_avg['style_diction']['total'];
-	$slo['style_voice']['count'] = $ans_avg['rhetsit_variety_genres']['count'] + $ans_avg['rhetsit_rhet_strategies']['count'] +$ans_avg['style_authentic_voice']['count'] +$ans_avg['style_struc_trans']['count'] +$ans_avg['style_diction']['count'];
-	$slo['style_voice']['values'] = array_merge($ans_avg['rhetsit_variety_genres']['values'], $ans_avg['rhetsit_rhet_strategies']['values'], $ans_avg['style_authentic_voice']['values'], $ans_avg['style_struc_trans']['values'], $ans_avg['style_diction']['values']);
-	$slo['style_voice']['avg']   = 
+	$slo['voice']['total'] = $ans_avg['rhetsit_variety_genres']['total'] + $ans_avg['rhetsit_rhet_strategies']['total'] +$ans_avg['style_authentic_voice']['total'] +$ans_avg['style_struc_trans']['total'] +$ans_avg['style_diction']['total'];
+	$slo['voice']['count'] = $ans_avg['rhetsit_variety_genres']['count'] + $ans_avg['rhetsit_rhet_strategies']['count'] +$ans_avg['style_authentic_voice']['count'] +$ans_avg['style_struc_trans']['count'] +$ans_avg['style_diction']['count'];
+	$slo['voice']['values'] = array_merge($ans_avg['rhetsit_variety_genres']['values'], $ans_avg['rhetsit_rhet_strategies']['values'], $ans_avg['style_authentic_voice']['values'], $ans_avg['style_struc_trans']['values'], $ans_avg['style_diction']['values']);
+	$slo['voice']['avg']   = 
 		(0.20 * $ans_avg['rhetsit_variety_genres']['total']/$ans_avg['rhetsit_variety_genres']['count']) + 
 		(0.20 * $ans_avg['rhetsit_rhet_strategies']['total']/$ans_avg['rhetsit_rhet_strategies']['count']) + 
 		(0.20 * $ans_avg['style_authentic_voice']['total']/$ans_avg['style_authentic_voice']['count']) +
 		(0.20 * $ans_avg['style_struc_trans']['total']/$ans_avg['style_struc_trans']['count']) +
 		(0.20 * $ans_avg['style_diction']['total']/$ans_avg['style_diction']['count']);
-	$slo['style_voice']['sd'] = sd($slo['style_voice']['values']);
+	$slo['voice']['sd'] = sd($slo['voice']['values']);
 
-	$slo['writing_conventions']['total'] = $ans_avg['edit_line_edits']['total'] + $ans_avg['edit_copyedits']['total'] +$ans_avg['style_struc_trans']['total'] +$ans_avg['sources_incorporate']['total'];
-	$slo['writing_conventions']['count'] = $ans_avg['edit_line_edits']['count'] + $ans_avg['edit_copyedits']['count'] +$ans_avg['style_struc_trans']['count'] +$ans_avg['sources_incorporate']['count'];
-	$slo['writing_conventions']['values'] = array_merge($ans_avg['edit_line_edits']['values'], $ans_avg['edit_copyedits']['values'], $ans_avg['style_struc_trans']['values'], $ans_avg['sources_incorporate']['values']);
-	$slo['writing_conventions']['avg']   = 
+	$slo['conventions']['total'] = $ans_avg['edit_line_edits']['total'] + $ans_avg['edit_copyedits']['total'] +$ans_avg['style_struc_trans']['total'] +$ans_avg['sources_incorporate']['total'];
+	$slo['conventions']['count'] = $ans_avg['edit_line_edits']['count'] + $ans_avg['edit_copyedits']['count'] +$ans_avg['style_struc_trans']['count'] +$ans_avg['sources_incorporate']['count'];
+	$slo['conventions']['values'] = array_merge($ans_avg['edit_line_edits']['values'], $ans_avg['edit_copyedits']['values'], $ans_avg['style_struc_trans']['values'], $ans_avg['sources_incorporate']['values']);
+	$slo['conventions']['avg']   = 
 		(0.30 * $ans_avg['edit_line_edits']['total']/$ans_avg['edit_line_edits']['count']) + 
 		(0.50 * $ans_avg['edit_copyedits']['total']/$ans_avg['edit_copyedits']['count']) + 
 		(0.10 * $ans_avg['style_struc_trans']['total']/$ans_avg['style_struc_trans']['count']) +
 		(0.10 * $ans_avg['sources_incorporate']['total']/$ans_avg['sources_incorporate']['count']);
-	$slo['writing_conventions']['sd'] = sd($slo['writing_conventions']['values']);
+	$slo['conventions']['sd'] = sd($slo['conventions']['values']);
 	
-	$slo['visual_design']['total'] = $ans_avg['des_relevant']['total'] + $ans_avg['des_cohesive']['total'] +$ans_avg['des_rhetorical']['total'] +$ans_avg['des_reading_xp']['total'];
-	$slo['visual_design']['count'] = $ans_avg['des_relevant']['count'] + $ans_avg['des_cohesive']['count'] +$ans_avg['des_rhetorical']['count'] +$ans_avg['des_reading_xp']['count'];
-	$slo['visual_design']['values'] = array_merge($ans_avg['des_relevant']['values'], $ans_avg['des_cohesive']['values'], $ans_avg['des_rhetorical']['values'], $ans_avg['des_reading_xp']['values']);
-	$slo['visual_design']['avg']   = 
+	$slo['visual_presentation']['total'] = $ans_avg['des_relevant']['total'] + $ans_avg['des_cohesive']['total'] +$ans_avg['des_rhetorical']['total'] +$ans_avg['des_reading_xp']['total'];
+	$slo['visual_presentation']['count'] = $ans_avg['des_relevant']['count'] + $ans_avg['des_cohesive']['count'] +$ans_avg['des_rhetorical']['count'] +$ans_avg['des_reading_xp']['count'];
+	$slo['visual_presentation']['values'] = array_merge($ans_avg['des_relevant']['values'], $ans_avg['des_cohesive']['values'], $ans_avg['des_rhetorical']['values'], $ans_avg['des_reading_xp']['values']);
+	$slo['visual_presentation']['avg']   = 
 		(0.20 * $ans_avg['des_relevant']['total']/$ans_avg['des_relevant']['count']) + 
 		(0.20 * $ans_avg['des_cohesive']['total']/$ans_avg['des_cohesive']['count']) + 
 		(0.30 * $ans_avg['des_rhetorical']['total']/$ans_avg['des_rhetorical']['count']) +
 		(0.40 * $ans_avg['des_reading_xp']['total']/$ans_avg['des_reading_xp']['count']);
-	$slo['writing_conventions']['sd'] = sd($slo['writing_conventions']['values']);
+	$slo['visual_presentation']['sd'] = sd($slo['visual_presentation']['values']);
 	
-	$slo['peer_edit']['total'] = $ans_avg['edit_big_pic']['total'] + $ans_avg['edit_line_edits']['total'] +$ans_avg['edit_copyedits']['total'];
-	$slo['peer_edit']['count'] = $ans_avg['edit_big_pic']['count'] + $ans_avg['edit_line_edits']['count'] +$ans_avg['edit_copyedits']['count'];
-	$slo['peer_edit']['values'] = array_merge($ans_avg['edit_big_pic']['values'], $ans_avg['edit_line_edits']['values'], $ans_avg['edit_copyedits']['values']);
-	$slo['peer_edit']['avg']   = 
+	$slo['peer_review']['total'] = $ans_avg['edit_big_pic']['total'] + $ans_avg['edit_line_edits']['total'] +$ans_avg['edit_copyedits']['total'];
+	$slo['peer_review']['count'] = $ans_avg['edit_big_pic']['count'] + $ans_avg['edit_line_edits']['count'] +$ans_avg['edit_copyedits']['count'];
+	$slo['peer_review']['values'] = array_merge($ans_avg['edit_big_pic']['values'], $ans_avg['edit_line_edits']['values'], $ans_avg['edit_copyedits']['values']);
+	$slo['peer_review']['avg']   = 
 		(0.35 * $ans_avg['edit_big_pic']['total']/$ans_avg['edit_big_pic']['count']) + 
 		(0.35 * $ans_avg['edit_line_edits']['total']/$ans_avg['edit_line_edits']['count']) + 
 		(0.30 * $ans_avg['edit_copyedits']['total']/$ans_avg['edit_copyedits']['count']);
-	$slo['writing_process']['sd'] = sd($slo['writing_process']['values']);
+	$slo['peer_review']['sd'] = sd($slo['peer_review']['values']);
 	
 	return $slo;
 }
@@ -801,8 +792,8 @@ function interRaterReliability($evals) {
 					foreach($compare['evals'] as $c_sid=>$c_eval) {		//loop through the comparer's evals to see if they did the same student
 						if($r_sid == $c_sid) {							//if they did the same student, look at actual answers
 							foreach($r_eval as $r_key=>$r_value) {		//cycle through each of the individual questions
-								if($c_eval[$r_key] && is_numeric($r_value) ) {					//if the compare array has this key, and if the value is a number, not a comment 
-									$raters[$rid]['reliability'][$r_key]['total_diff'] += abs($r_value - $c_eval[$r_key]) /6 *100; //add the absolute value of the diff between the answers then convert to percentage !!!hard coded to 6!!!
+								if($c_eval[$r_key] && is_numeric($r_value) && $r_value>0 && $c_eval[$r_key]>0 ) {					//if the compare array has this key, and if the value is a number, not a comment, and if both values aren't zero (n/a)
+									$raters[$rid]['reliability'][$r_key]['total_diff'] += abs($r_value - $c_eval[$r_key]) /6 *100; 	//add the absolute value of the diff between the answers then convert to percentage !!!hard coded to 6!!!
 									$raters[$rid]['reliability'][$r_key]['count'] ++; 	//increment a counter that tracks how many times there's an overlap (will be used to avg the total)
 								}
 							}
