@@ -162,7 +162,6 @@ function seufolios_admin_form_submit() {
 	//******
 	//Create Full Report of all results
 	$body_text = loadHeader();
-	//$body_text .= print_r($eval_avgs, true);
 	
 	//plot all averages
 	$flotname = 'all_avgs';
@@ -172,9 +171,9 @@ function seufolios_admin_form_submit() {
 	$flotname = 'current_semester_avg';
 	$body_text .= barchartAvgs($current_eval_avgs, $flotname); //create flot for current semester's data
 	$body_text .= printComments($current_eval_avgs);
-	$body_text .= printEvalQs($sections, $questions);
 	$body_text .= printTaxes($evals);
 	$body_text .= interRaterReliability($evals);
+	$body_text .= printEvalQs($sections, $questions);
 	$body_text .= printEvals($evals);
 	
 	$node = new stdClass();
@@ -205,8 +204,8 @@ function seufolios_admin_form_submit() {
 	$flotname = 'current_semester_avg';
 	$body_text .= barchartAvgs($current_eval_avgs, $flotname); //create flot for current semester's data
 	$body_text .= printComments($current_eval_avgs);
-	$body_text .= printEvalQs($sections, $questions);
 	$body_text .= printTaxes($evals);
+	$body_text .= printEvalQs($sections, $questions);
 	
 	$node = new stdClass();
 	$node->type = 'engw_test'; //!!!!hard coded to ENGW, needs dynamic
@@ -326,9 +325,7 @@ function calcEvalAvgs($evals) {
 					  $ans_avg[$key]['total'] = 0;
 					  $ans_avg[$key]['count'] = 0;
 					  $ans_avg[$key]['comments'] = array();
-				  } elseif ($val == 0) { 	//for n/a option
-					  
-				  }
+				  } 
 			}
 		}
 	}
@@ -736,8 +733,8 @@ function printEvalQs($sections, $questions) {
 
 function printEvals($evals) {
 	foreach($evals as $eval) {
-	   $elems_ar = explode('&', $eval['answers']);     		// get all variables
-		for ($i = 0; $i < count($elems_ar); $i++) {
+	   $elems_ar = explode('&', $eval['answers']);     			// get all variables
+	   for ($i = 0; $i < count($elems_ar); $i++) {
 		  list($key, $val) = explode('=', $elems_ar[$i]); 	// split variable name from value
 		  $key = urldecode($key);
 		  $val = urldecode($val);
@@ -746,7 +743,6 @@ function printEvals($evals) {
 	}
 	
 	$result = "<h2>Evaluations</h2>";
-
 	
 	foreach($evals as $eval) {
 		$result .= "<h3><a href='" .$eval['siteurl'] ."'>" .$eval['studentid'] ."</a></h3>\n";
@@ -767,8 +763,8 @@ function interRaterReliability($evals) {
 	foreach($evals as $eval) {
 		$elems_ar = explode('&', $eval['answers']);                   // get all variables
 		for ($i = 0; $i < count($elems_ar); $i++) {
-		  list($key, $val) = explode('=', $elems_ar[$i]); // split variable name from value
-		  $elems[urldecode($key)] = $val = urldecode($val);
+			list($key, $val) = explode('=', $elems_ar[$i]); // split variable name from value
+		  	$elems[urldecode($key)] = $val = urldecode($val);
 		}
 		
 		$raters[$eval['profid']]['evals'][$eval['studentid']] = $elems;
@@ -780,6 +776,7 @@ function interRaterReliability($evals) {
 			foreach($e as $key=>$value) {
 				$raters[$rid]['reliability'][$key]['total_diff'] = 0;
 				$raters[$rid]['reliability'][$key]['count'] = 0;
+				$raters[$rid]['na_count'] = 0;
 			}
 		}
 	}
@@ -802,12 +799,19 @@ function interRaterReliability($evals) {
 				}
 			}
 		}
+		//populate na_options
+		foreach($rater['evals'] as $r_sid=>$r_eval) {
+			foreach($r_eval as $r_key=>$r_value) {
+				if($r_value==0) $raters[$rid]['na_count']++;
+			}
+		}
 	}
 	
 	//print the results as a table
 	$return = '<h2>Interrater Reliability</h2>';
 	foreach($raters as $rid=>$rater) {
 		$return .= "<h3>$rid</h3> <table><tr><th>Question</th><th>Average Variation</th></tr>";
+		if($rater['na_count'] > 0) { $return .= ($rater['na_count'] >= 3 ?"<tr><td class='alert'>Questions answered N/A</td><td class='alert'>".$rater['na_count']."</td></tr>" :"<tr><td>Questions answered N/A</td><td>".$rater['na_count']."</td></tr>"); }
 		foreach($rater['reliability'] as $key=>$a) {
 			if($a['count']) { 							//make sure we don't divide by zero
 				$avg = round($a['total_diff']/$a['count'], 2);
@@ -823,27 +827,37 @@ function interRaterReliability($evals) {
 function printTaxes($evals) {
 	$students = array();
 	$taxcount = array();
-	
+	$return = '';
 	foreach($evals as $e) {
 		if(!in_array($e['studentid'], $students) ) { 							//test if we have already loaded this student's taxes
-			$students[] = $e['studentid'];										//add the student to the screening array
-			if(strlen($e['taxonomies'])) {										//make sure there are actual taxes to load
+			$students[] = $e['studentid'];	
+			if(!empty($e['taxonomies'])) {
+				foreach($e['taxonomies'] as $tax_key=>$tax_val) {
+					foreach($tax_val as $term_key=>$term_val) {
+						if (isset($taxcount[$tax_key][$term_key]) ) $taxcount[$tax_key][$term_key] += $term_val; 
+						else $taxcount[$tax_key][$term_key] = $term_val;
+					}
+				}
+				/*
 				$elems_ar = explode('&', $e['taxonomies']);                   	// get all variables
 				for ($j = 0; $j < count($elems_ar); $j++) {
 				  list($key, $val) = explode('=', $elems_ar[$j]); 				// split variable name from value
 				  if(array_key_exists($key,$taxcount)) $taxcount[$key]+=$val;	// if there's already the key, just add
 				  else $taxcount[$key] = $val;									//if the key doesn't exist, create it
 				}
+				*/
 			}
 		}
 	}
 	
-	$return =  "<h2>Taxonomy Report</h2>\n";
-	$return .= "<table><tr><th>Term</th><th>Total Count</th></tr>\n";
-	foreach($taxcount as $key=>$t) {
-		$return .= "<tr><td>$key</td><td>$t</td></tr>\n";	
+	$return .=  "<h2>Taxonomy Report</h2>\n";
+	foreach($taxcount as $tax_key=>$tax_val) {
+		$return .= "<h3>$tax_key</h3>\n<table>\n<tr><th>Term</th><th>Count</th></tr>\n";
+		foreach($tax_val as $term_key=>$term_val) {
+			$return .= "<tr><td>$term_key</td><td>$term_val</td></tr>\n";
+		}
+		$return .= "</table>\n";
 	}
-	$return .= "</table>\n";
 	
 	return $return;
 }
