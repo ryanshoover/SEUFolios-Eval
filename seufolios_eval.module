@@ -156,7 +156,14 @@ function seufolios_admin_form_submit() {
 	
 	if($_POST['seufolios_newnode_dept'] == 'ENGW') { 			//load ENGW historical data
 		$history = createENGWHistory($_POST['seufolios_newnode_startdate'], $_POST['seufolios_newnode_enddate']);
-		if($history) {$eval_avgs = $eval_avgs + $history;}
+		if($history) $eval_avgs = $eval_avgs + $history;
+		
+		//the next 4 convert ENGW subquestions into SLOs
+		$subques_avgs = $eval_avgs;
+		$eval_avgs = convertFromSubquestionAll($eval_avgs);
+		
+		$current_subques_avgs = $current_eval_avgs;
+		$current_eval_avgs = $eval_avgs[max(array_keys($eval_avgs))];
 	}
 	
 	//******
@@ -171,6 +178,7 @@ function seufolios_admin_form_submit() {
 	$flotname = 'current_semester_avg';
 	$body_text .= barchartAvgs($current_eval_avgs, $flotname); //create flot for current semester's data
 	$body_text .= printComments($current_eval_avgs);
+	$body_text .= printSubquesSLOComp($current_eval_avgs, $current_subques_avgs);
 	$body_text .= printTaxes($evals);
 	$body_text .= interRaterReliability($evals);
 	$body_text .= printEvalQs($sections, $questions);
@@ -360,6 +368,18 @@ function calcEvalAvgs($evals) {
 		}
 	}	
 	
+	return $ans_avg;
+}
+
+//the next two take raw question avgs and convert them to ENGW SLOs
+function convertFromSubquestionAll($evals) {
+	foreach($evals as $year=>$eval) {
+		if(isset($eval['des_relevant']['total'])) $converted[$year] = convertFromSubquestion($eval);
+		else $converted[$year] = $eval;
+	}
+	return $converted;	
+}
+function convertFromSubquestion($ans_avg) {
 	//!!! HARD CODED !!!
 	//Process subquestions into student SLOs
 	$slo['write_for_situation']['total'] = $ans_avg['des_relevant']['total'] + $ans_avg['des_rhetorical']['total'] +$ans_avg['des_reading_xp']['total'] +$ans_avg['rhetsit_portfolio']['total'] +$ans_avg['rhetsit_master_genres']['total'] +$ans_avg['rhetsit_variety_genres']['total'] +$ans_avg['rhetsit_rhet_strategies']['total'];
@@ -434,6 +454,26 @@ function calcEvalAvgs($evals) {
 	$slo['peer_review']['sd'] = sd($slo['peer_review']['values']);
 	
 	return $slo;
+}
+
+//print out a side by side comparison of subquestion-based SLO calculations and the direct SLO ratings
+//only used in Spring 2013?
+function printSubquesSLOComp($subq, $slo) {
+	$result = "
+	<h2>Compare New and Old Questions</h2>
+	<table>
+	<tr><th>SLO</td><th>New Questions</th><th>Old Questions</th><th>Difference</th></tr>
+	<tr><td>Write for situation</td><td>" 	.number_format(round($subq['write_for_situation']['avg'], 2), 2) ."</td><td>" 	.number_format(round($slo['write_for_situation']['avg'], 2), 2) ."</td><td>" 	.number_format(round($subq['write_for_situation']['avg']-$slo['write_for_situation']['avg'], 2), 2) ."</td></tr>
+	<tr><td>Analyze situation</td><td>" 	.number_format(round($subq['analyze_situation']['avg'], 2), 2) ."</td><td>" 	.number_format(round($slo['analyze_situation']['avg'], 2), 2) ."</td><td>" 		.number_format(round($subq['analyze_situation']['avg']-$slo['analyze_situation']['avg'], 2), 2) ."</td></tr>
+	<tr><td>Writing process</td><td>" 		.number_format(round($subq['writing_process']['avg'], 2), 2) ."</td><td>" 		.number_format(round($slo['writing_process']['avg'], 2), 2) ."</td><td>" 		.number_format(round($subq['writing_process']['avg']-$slo['writing_process']['avg'], 2), 2) ."</td></tr>
+	<tr><td>Voice</td><td>" 				.number_format(round($subq['voice']['avg'], 2), 2) ."</td><td>" 				.number_format(round($slo['voice']['avg'], 2), 2) ."</td><td>" 					.number_format(round($subq['voice']['avg']-$slo['voice']['avg'], 2), 2) ."</td></tr>
+	<tr><td>Conventions</td><td>" 			.number_format(round($subq['conventions']['avg'], 2), 2) ."</td><td>" 			.number_format(round($slo['conventions']['avg'], 2), 2) ."</td><td>" 			.number_format(round($subq['conventions']['avg']-$slo['conventions']['avg'], 2), 2) ."</td></tr>
+	<tr><td>Visual Presentation</td><td>" 	.number_format(round($subq['visual_presentation']['avg'], 2), 2) ."</td><td>" 	.number_format(round($slo['visual_presentation']['avg'], 2), 2) ."</td><td>" 	.number_format(round($subq['visual_presentation']['avg']-$slo['visual_presentation']['avg'], 2), 2) ."</td></tr>
+	<tr><td>Peer Review</td><td>" 			.number_format(round($subq['peer_review']['avg'], 2), 2) ."</td><td>" 			.number_format(round($slo['peer_review']['avg'], 2), 2) ."</td><td>" 			.number_format(round($subq['peer_review']['avg']-$slo['peer_review']['avg'], 2), 2) ."</td></tr>
+	</table>
+	";
+	
+	return $result;
 }
 
 //Universal JS and CSS
@@ -802,7 +842,7 @@ function interRaterReliability($evals) {
 		//populate na_options
 		foreach($rater['evals'] as $r_sid=>$r_eval) {
 			foreach($r_eval as $r_key=>$r_value) {
-				if($r_value==0) $raters[$rid]['na_count']++;
+				if($r_value!='' && $r_value==0) $raters[$rid]['na_count']++; // !='' makes sure we don't count blank comments
 			}
 		}
 	}
