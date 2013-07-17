@@ -1,0 +1,37 @@
+/* Settings form styles */
+#ques_table_wrapper table {
+	width: auto;
+}
+
+#ques_table_wrapper .ques-table-sec {
+	font-weight: 700;
+}
+
+
+/* produced report styles */
+div.legend div, div.legend table{
+	/*margin-left:177px;*/
+}
+
+div.legend table {
+	right: -175px !important;
+    top: -7px !important;
+	font-size: x-small;
+}
+
+div.legend {
+	border: 1px #194973 dotted;
+}
+
+div.legend div {
+	right: -175px !important;
+}
+
+
+.flot-zoom {
+	margin-top: 20px;
+}
+
+div.tickLabels {
+	font-size: x-small !important;
+}

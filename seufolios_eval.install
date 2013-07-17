@@ -7,86 +7,41 @@
  
  /**
  * Implements hook_field_schema().
- * This one is to grab all the relevant evaluations
+ * Set up database for storing variables
  */
- /*
-function seu_evals_field_schema($field) {
-  return array(
-    'columns' => array(
-      'eid' => array(
-        'description' => 'The eval id',
-        'type' => 'int',
-        'not null' => FALSE,
-        'unsigned' => TRUE,
+ 
+function seufolios_eval_schema() {
+  $schema['seufolios_eval_settings'] = array(
+		'description' => 'Variables used by SEUFolios Eval',
+    'fields' => array(
+      'vid' => array(
+      	'description' => 'Primary identifier for a variable',
+				'type' 				=> 'serial',
+				'not null' 		=> TRUE,
+				'unsigned'		=> TRUE,
       ),
-      'pid' => array(
-        'description' => 'The target porfolio id of this evaluation. This refers to the seu_portfolios table',
-        'type' => 'int',
-        'size' => 'tiny',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 1,
+      'name' => array(
+      	'description' => 'Variable name',
+				'type' 				=> 'text',
+				'size'				=> 'tiny',
+				'not null' 		=> TRUE,
       ),
-      'evaluator' => array(
-        'description' => 'The SEU-based username of the portfolios evaluator',
-        'type' => 'text',
-        'not null' => FALSE,
+      'dept' => array(
+      	'description' => 'Department abbreviation',
+				'type' 				=> 'text',
+				'size'				=> 'tiny',
+				'not null' 		=> FALSE,
       ),
-	  'author' => array(
-        'description' => 'The SEU-based username of the portfolios evaluator',
-        'type' => 'text',
-        'not null' => FALSE,
-      ),
-    ),
-    'indexes' => array(
-      'eid' => array('eid'),
-    ),
-    'foreign keys' => array(
-      'fid' => array(
-        'table' => 'file_managed',
-        'columns' => array('fid' => 'fid'),
+      'settings' => array(
+      	'description' => 'Serialzied array of settings',
+				'type' 				=> 'text',
+				'size'				=> 'medium',
+				'not null' 		=> FALSE,
       ),
     ),
+    'primary key' => array('vid'),
   );
+	
+	return $schema;
 }
-*/
-/**
- * Implements hook_field_schema().
- * This one is to grab all the relevant portfolio data
- */
- /*
-function seu_portfolios_field_schema($field) {
-  return array(
-    'columns' => array(
-      'id' => array(
-        'description' => 'The {file_managed}.fid being referenced in this field.',
-        'type' => 'int',
-        'not null' => FALSE,
-        'unsigned' => TRUE,
-      ),
-      'display' => array(
-        'description' => 'Flag to control whether this file should be displayed when viewing content.',
-        'type' => 'int',
-        'size' => 'tiny',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 1,
-      ),
-      'description' => array(
-        'description' => 'A description of the file.',
-        'type' => 'text',
-        'not null' => FALSE,
-      ),
-    ),
-    'indexes' => array(
-      'fid' => array('fid'),
-    ),
-    'foreign keys' => array(
-      'fid' => array(
-        'table' => 'file_managed',
-        'columns' => array('fid' => 'fid'),
-      ),
-    ),
-  );
-}
-*/
+

@@ -6,4 +6,5 @@ core = 7.x
 
 configure = admin/config/seufolios
 
-files[] = seufolios.module
+files[] = seufolios_eval.module
+stylesheets[all][] = seufolios_eval.css
