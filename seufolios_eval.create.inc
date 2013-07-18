@@ -66,7 +66,7 @@ function seufolios_create_report_form($form, &$form_state) {
 	'#value' => t('Run report'),
 	);
 	
-	
+	/*
 	$result = db_query("SELECT settings FROM {seufolios_eval_settings} WHERE name = :name AND dept = :dept", array(':name'=>'slo-ques-relationship', ':dept'=>'ENGW') );
 	$data = $result->fetchObject();
 	$rels = unserialize($data->settings);
@@ -79,7 +79,7 @@ function seufolios_create_report_form($form, &$form_state) {
 		'#title' => 'SLO Ques Relationship',
 		'#markup' => '<pre>' .print_r($depts, true) .'</pre>',
 	);
-	
+	*/
 	return $form;
 }
 /*
@@ -119,7 +119,7 @@ function seufolios_create_report_form_submit($form, &$form_state) {
 	$questions 	= $result['questions'];
 	$taxes 		= $result['taxes'];
 	$evals 		= $result['evals'];
-	
+
 	foreach($questions as $qs) {
 		foreach($qs as $q) {
 			$all_questions[$q->slug] = $q;
@@ -128,7 +128,7 @@ function seufolios_create_report_form_submit($form, &$form_state) {
 	
 	$eval_avgs = calcAllEvalAvgs($evals);
 	$current_eval_avgs = $eval_avgs[max(array_keys($eval_avgs))];
-	
+
 	$slos = convertAllQuesToSLO($eval_avgs, $dept);
 	
 	if($dept == 'ENGW') { 			//load ENGW historical data
@@ -170,7 +170,7 @@ function seufolios_create_report_form_submit($form, &$form_state) {
 	$node->path = array('alias' => $path);
   
 	node_save($node);
-	
+	/*
 	//******
 	//Create Internal Report Distrubution
 	$body_text = loadHeader();
@@ -230,7 +230,7 @@ function seufolios_create_report_form_submit($form, &$form_state) {
 	$node->path = array('alias' => $path);
   
 	node_save($node);
-	
+	*/
 }
 
 
@@ -260,11 +260,11 @@ function calcAllEvalAvgs($evals) {
 }
 
 function calcEvalAvgs($evals) {
-	//get question types and process into array
 	global $dept;
 	$wp_ques_types = get_wp_question_data();
 	$depts = get_wp_dept_data();
 	
+	//create question types array
 	foreach($wp_ques_types as $qt) {
 		$q_code = urldecode($qt->code);
 		if(strpos($q_code, 'type="range"') || strpos($q_code, "type='range'")) { //see if it's an input with type=range
@@ -320,14 +320,14 @@ function calcEvalAvgs($evals) {
 					}
 				}
 				 
-				if (is_numeric($val)) { 							//populate the $ans_avg array based on whether it's a number or a comment
-					if($dept == 'ENGW') $val = get_engw_conversion($val, $ques_types[$ans_avg[$key]['type']]['max']);
+				if (is_numeric($val)) { 							//populate the $ans_avg array based on whether it's a comment
+					if($dept == 'ENGW') $val = get_engw_conversion($val, $eval['submittime']);
 					else $val = $val /$ques_types[$ans_avg[$key]['type']]['max'] *100;		//converts the value to a percent score 
 					$ans_avg[$key]['total'] += $val;
 					$ans_avg[$key]['count'] ++;
 					$ans_avg[$key]['values'][] = $val;
 				} else {
-					$ans_avg[$key]['comments'][] = $val;
+					$ans_avg[$key]['comments'][] = stripslashes($val);
 				}
 			}
 		}	
@@ -346,8 +346,11 @@ function calcEvalAvgs($evals) {
 
 //special function just for ENGW
 //ENGW uses a coversion to standard essay grades (A, B, C, D, F)
-function get_engw_conversion($val, $max) {
-	if($max == 5) { 		//5 point scale
+function get_engw_conversion($val, $time) {
+	$timestamp = strtotime($time);
+	$now = 1372654800; //time from 20130701 00:00:00
+	
+	if($timestamp > $now) { 		//5 point scale used for ENGW entering evaluations from fall 2012 on 20130717
 		switch($val) {
 			case 0:
 				return null;
@@ -362,8 +365,9 @@ function get_engw_conversion($val, $max) {
 			case 5:
 				return 95;
 		}
-	} elseif($max == 6) {	// 6 point scale
+	} else {	// 6 point scale  used for ENGW evaluations from assessment in spring 2013
 		switch($val) {
+			/*low range*/
 			case 0:
 				return null;
 			case 1:
@@ -378,6 +382,36 @@ function get_engw_conversion($val, $max) {
 				return 85;
 			case 6:
 				return 95;
+			/*midrage
+			case 1:
+				return 55;
+			case 2:
+				return 63;
+			case 3: 
+				return 71;
+			case 4:
+				return 79;
+			case 5:
+				return 87;
+			case 6:
+				return 95;
+				*/
+			/*high range
+			case 0:
+				return null;
+			case 1:
+				return 55;
+			case 2:
+				return 65;
+			case 3: 
+				return 75;
+			case 4:
+				return 85;
+			case 5:
+				return 95;
+			case 6:
+				return 95;
+				*/
 		}
 	}
 }

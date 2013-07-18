@@ -93,7 +93,7 @@ function get_wp_dept_data() {
 	$data = curl_exec($ch);
 	curl_close($ch);
 	
-	return unserialize($data);
+	return @unserialize($data);
 }
 
 // query wp install for question data
@@ -129,7 +129,7 @@ function get_wp_question_data() {
 	$data = curl_exec($ch);
 	curl_close($ch);
 	
-	return unserialize($data);
+	return @unserialize($data);
 }
 
 
@@ -175,7 +175,7 @@ function get_wp_evaluation_data($form) {
 	$data = curl_exec($ch);
 	curl_close($ch);
 	
-	return unserialize($data);
+	return @unserialize($data);
 	
 }
 

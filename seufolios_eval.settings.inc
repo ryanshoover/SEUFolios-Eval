@@ -19,7 +19,7 @@ function seufolios_settings_form($form, &$form_state) {
 	$result = db_query("SELECT settings FROM {seufolios_eval_settings} WHERE name = :name", array(':name'=>'wp_url_key') );
 	$data = $result->fetchObject();
 	if($data) $wp_url_key = unserialize($data->settings);
-	else $wp_url_key = 'abdefg1234567';
+	else $wp_url_key = 'abcdefg1234567';
 	
 	//get wp_dept_data
 	if($go_for_depts) {
@@ -270,14 +270,14 @@ function seufolios_settings_form_slo_remove_one($form, &$form_state) {
 function seufolios_settings_form_validate($form, &$form_state) {
 	//clear any existing errors
 	drupal_get_messages('error');
-	
+	/*
 	//check url settings
 	$data = get_wp_dept_data();
 
 	if(!$data) {
 		form_set_error('URL', 'Oops. Looks like we couldn\'t connect to your WordPress site. Please check the site url and key. WordPress responded with: ' .$wp_data);
 	}
-	
+	*/
 	//update individual department question-slo relationship
 	if(isset($form_state['values']['dept_options']['ques_table'])) {
 		$temp = $form_state['values']['dept_options']['ques_table'];
