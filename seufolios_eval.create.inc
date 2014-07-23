@@ -128,6 +128,8 @@ function seufolios_create_report_form_submit($form, &$form_state) {
 	
 	$eval_avgs = calcAllEvalAvgs($evals);
 	$current_eval_avgs = $eval_avgs[max(array_keys($eval_avgs))];
+	
+	$passing_rates = findPassingRates($evals);
 
 	$slos = convertAllQuesToSLO($eval_avgs, $dept);
 	
@@ -135,6 +137,8 @@ function seufolios_create_report_form_submit($form, &$form_state) {
 		$history = createENGWHistory($form_state['values']['seufolios_newnode_startdate'], $form_state['values']['seufolios_newnode_enddate']);
 		if($history) $slos = $slos + $history;
 	}
+	//make sure that $slos are sorted newest to oldest
+	krsort($slos);
 	
 	$current_slos = $slos[max(array_keys($slos))];
 	
@@ -148,6 +152,7 @@ function seufolios_create_report_form_submit($form, &$form_state) {
 	//flot current_semester_avg
 	$flotname = 'current_semester_avg';
 	$body_text .= barchartAvgs($current_slos, $flotname); //create flot for current semester's data
+	$body_text .= printPassingRates($passing_rates);
 	$body_text .= printComments($current_eval_avgs);
 	//$body_text .= printSubquesSLOComp($current_eval_avgs, $current_subques_avgs);
 	$body_text .= printTaxes($evals);
@@ -159,7 +164,7 @@ function seufolios_create_report_form_submit($form, &$form_state) {
 	$node->type = 'engw_test'; //!!!!hard coded to ENGW, needs dynamic
 	node_object_prepare($node);
 	
-	$node->title    = $_POST['seufolios_newnode_title'] .' Full Report'; 
+	$node->title    = $_POST['seufolios_newnode_title']; // .' Full Report'; 
 	$node->language = LANGUAGE_NONE;
   
 	$node->body[$node->language][0]['value']   = $body_text;
@@ -327,6 +332,10 @@ function calcEvalAvgs($evals) {
 					$ans_avg[$key]['count'] ++;
 					$ans_avg[$key]['values'][] = $val;
 				} else {
+					//recursive strip slashes
+					while(strpos($val, '\\')) {
+						$val = stripslashes($val);
+					}
 					$ans_avg[$key]['comments'][] = stripslashes($val);
 				}
 			}
@@ -367,7 +376,7 @@ function get_engw_conversion($val, $time) {
 		}
 	} else {	// 6 point scale  used for ENGW evaluations from assessment in spring 2013
 		switch($val) {
-			/*low range*/
+			/*low range
 			case 0:
 				return null;
 			case 1:
@@ -381,8 +390,8 @@ function get_engw_conversion($val, $time) {
 			case 5:
 				return 85;
 			case 6:
-				return 95;
-			/*midrage
+				return 95;*/
+			/*midrage*/
 			case 1:
 				return 55;
 			case 2:
@@ -395,7 +404,6 @@ function get_engw_conversion($val, $time) {
 				return 87;
 			case 6:
 				return 95;
-				*/
 			/*high range
 			case 0:
 				return null;
@@ -414,6 +422,127 @@ function get_engw_conversion($val, $time) {
 				*/
 		}
 	}
+}
+
+//find % of students scoring over 70 on SLOs
+function findPassingRates($evals) {
+	global $dept;
+	$slos = array();
+	$wp_ques_types = get_wp_question_data();
+	$depts = get_wp_dept_data();
+	
+	//create question types array
+	foreach($wp_ques_types as $qt) {
+		$q_code = urldecode($qt->code);
+		if(strpos($q_code, 'type="range"') || strpos($q_code, "type='range'")) { //see if it's an input with type=range
+			$q_range_pos = strpos($q_code, 'max=');						//find the start of the line that defines the max value of the range
+			$q_range_str = substr($q_code, $q_range_pos, 7);
+			preg_match('/(\d+)/', $q_range_str, $matches);		//pull the number out of the string we got above: /(\d+)/ is the regex to find the number
+			$ques_types[$qt->id]['slug'] = $qt->slug;
+			$ques_types[$qt->id]['type'] = 'range';
+			$ques_types[$qt->id]['max'] = $matches[0];
+		}
+	}
+	
+	//feed evals into students array
+	foreach($evals as $eval) {
+		if($eval['answers']) {
+			$sid = $eval['studentid'];
+			$elems_ar = explode('&', $eval['answers']); 
+			
+			for ($i = 0; $i < count($elems_ar); $i++) {
+			  $key = strtok($elems_ar[$i], "=");
+			  $key = str_replace('_input', '', $key);
+				$key = urldecode($key);
+				
+				//create array for SLOs
+				if(!array_key_exists($key, $slos)) {
+					$slos[$key]['avg'] = 0;
+					$slos[$key]['passing'] = 0;
+					$slos[$key]['total'] = 0;
+				}					
+				
+			  $val = strtok("=");
+			  if ($val) { 				//screens out both missing values and zeros
+				  $students[$sid][$key]['total'] = 0;
+				  $students[$sid][$key]['count'] = 0;
+				  $students[$sid][$key]['comments'] = array();
+			  } 
+			}
+		}
+		
+	}
+	
+	//process answers into array
+	foreach($evals as $eval) {
+		$sid = $eval['studentid'];
+		$elems_ar = explode('&', $eval['answers']);     		// get all variables
+		for ($i = 0; $i < count($elems_ar); $i++) {
+			$key = strtok($elems_ar[$i], "=");
+			$key = str_replace('_input', '', $key);
+			$val = strtok("=");
+			if ($val) {
+				$key = urldecode($key);
+				$val = urldecode($val);
+				
+				if (is_numeric($val)) { 							//populate the $students array based on whether it's a comment
+					if($dept == 'ENGW') $val = get_engw_conversion($val, $eval['submittime']);
+					else $val = $val /$ques_types[$ans_avg[$key]['type']]['max'] *100;		//converts the value to a percent score 
+					$students[$sid][$key]['total'] += $val;
+					$students[$sid][$key]['count'] ++;
+					$students[$sid][$key]['values'][] = $val;
+				}
+			}
+		}	
+	}
+	
+	//calculate answer avg for each student
+	foreach($students as &$s) {
+		foreach($s as &$s_key) {
+			if($s_key['count']) {
+				$s_key['avg'] = $s_key['total']/$s_key['count'];
+			}
+		}
+	}	
+	
+	//calculate summary rates
+	foreach($students as $s) {
+		foreach($s as $key=>$val) {
+			if(isset($val['avg'])) {
+				$slos[$key]['total']++;
+				if($val['avg']>=70) {
+					$slos[$key]['passing']++;
+				}
+			}
+		}
+	}	
+	
+	foreach($slos as &$s) {
+		if($s['total']>0)
+			$s['avg'] = $s['passing'] / $s['total'];
+	}
+	
+	return $slos;
+}
+
+function printPassingRates($slos) {
+	$html = "
+	<h2>Passing Rates</h2>
+	<p>The number of students who scored at least 70 on their evaluations</p>
+	<table>
+	<tr>
+	<th>SLO</th>
+	<th>Passing Rate</th>
+	<th>Total Students</th>
+	</tr>
+		";
+		
+	foreach($slos as $k=>$s) {
+		$html .= "<tr><td>$k</td><td>".round($s['avg']*100,1)." %</td><td>".$s['total']."</td>\n";
+	}
+		
+	$html .= "</table>";
+	return $html;
 }
 
 //process multi year evals into slos
@@ -608,7 +737,7 @@ function loadHeader() {
 	  
 	var previousPoint = null;
 	jQuery(document).ready(function($) {
-		jQuery(".flot-example").bind("plothover", function (event, pos, item) {
+		$(".flot-example").bind("plothover", function (event, pos, item) {
 			if (item) {
 				if (previousPoint != item.datapoint) {
 					previousPoint = item.datapoint;
@@ -621,12 +750,13 @@ function loadHeader() {
 				}
 			}
 			else {
-				jQuery("#tooltip").remove();
+				$("#tooltip").remove();
 				previousPoint = null;            
 			}
+		});
 	
 
-		jQuery(".line-chart").bind("plothover", function (event, pos, item) {
+		$(".line-chart").bind("plothover", function (event, pos, item) {
 			if (item) {
 				if (previousPoint != item.datapoint) {
 					previousPoint = item.datapoint;
@@ -639,7 +769,7 @@ function loadHeader() {
 				}
 			}
 			else {
-				jQuery("#tooltip").remove();
+				$("#tooltip").remove();
 				previousPoint = null;            
 			}
 		});

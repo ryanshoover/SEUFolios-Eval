@@ -87,7 +87,7 @@ function seufolios_settings_form($form, &$form_state) {
 			'#title' => 'Department settings',
 	 	);
 		
-		/* 
+		/*
  		$form['var_dump'] = array(
  			'#type' => 'item',
 			'#title' => 'Dump of WP return',
@@ -229,6 +229,14 @@ function seufolios_settings_form($form, &$form_state) {
 						unset($col1, $fields, $row);
 					}
 				}	
+				
+				/*
+		 		$form['dept_options']['var_dump'] = array(
+		 			'#type' => 'item',
+					'#title' => 'Dump of WP return',
+		 			'#markup' => "<pre>".print_r($dept_data, true)."</pre>",
+		 		);
+				*/
 			}
 	  }
 	}
